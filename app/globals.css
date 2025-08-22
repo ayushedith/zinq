@@ -100,7 +100,7 @@ body::before {
   content: "";
   position: fixed;
   top: 0; left: 0; right: 0; height: 4px;
-  background: linear-gradient(90deg, #00c2ff, #ff42c6);
+  background: linear-gradient(90deg, var(--primary), var(--accent));
   pointer-events: none;
   z-index: 50;
 }

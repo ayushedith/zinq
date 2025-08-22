@@ -13,7 +13,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]"
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(120,120,120,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(120,120,120,0.08)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:20px_20px]" />
-        <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(60%_60%_at_50%_0%,hsl(var(--color-primary)/.25),transparent_70%)]" />
+  <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(60%_60%_at_50%_0%,color-mix(in_oklab,var(--primary)_25%,transparent),transparent_70%)]" />
       </div>
 
       <div className="container mx-auto max-w-6xl px-4 pt-20 pb-10">
@@ -72,7 +72,7 @@ export function Hero() {
           {/* Right: mascot */}
           <div className="relative flex justify-center md:justify-end">
             <div className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] md:w-[420px] md:h-[420px]">
-              <div className="absolute -inset-6 rounded-full bg-[radial-gradient(60%_60%_at_50%_40%,hsl(var(--color-primary)/.35),transparent_70%)]" aria-hidden />
+              <div className="absolute -inset-6 rounded-full bg-[radial-gradient(60%_60%_at_50%_40%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_70%)]" aria-hidden />
               <Image
                 src="/mascot.png"
                 alt="Zinq mascot"

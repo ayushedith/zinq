@@ -484,6 +484,24 @@ export default function QRGeneratorApp() {
         </div>
       </section>
 
+      {/* Open Source section */}
+      <section className="container mx-auto max-w-6xl px-4 py-12">
+        <div className="rounded-xl border p-6 text-center bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+          <blockquote className="text-xl sm:text-2xl font-semibold">
+            “Zinq is proudly Open source”
+          </blockquote>
+          <p className="text-sm text-muted-foreground mt-2">Contributions are welcome.</p>
+          <div className="mt-4 flex justify-center">
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://github.com/ayushedith/zinq" target="_blank" rel="noopener noreferrer" className="gap-2 inline-flex items-center">
+                <Link className="h-4 w-4" />
+                View on GitHub
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* App */}
       <section id="app" className="container mx-auto px-4 pb-14 max-w-6xl">
         <div className="grid lg:grid-cols-3 gap-8">

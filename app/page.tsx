@@ -33,9 +33,11 @@ import {
   Settings,
   Trash2,
   Copy,
+  Star,
 } from "lucide-react"
 import QRCode from "qrcode"
 import { Hero } from "@/components/hero"
+import { toast } from "@/hooks/use-toast"
 
 const backgroundPatterns = [
   { name: "Clean", class: "bg-white", preview: "bg-white" },
@@ -103,6 +105,7 @@ export default function QRGeneratorApp() {
   const [customBackground, setCustomBackground] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [history, setHistory] = useState<QRHistory[]>([])
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({})
   const [showHistory, setShowHistory] = useState(false)
 
   const [qrSize, setQrSize] = useState([400])
@@ -122,6 +125,85 @@ export default function QRGeneratorApp() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Restore persisted state on first mount
+  useEffect(() => {
+    try {
+      const rawHistory = localStorage.getItem('zinq:history')
+      if (rawHistory) {
+        const parsed: QRHistory[] = JSON.parse(rawHistory)
+        // revive Date
+        parsed.forEach((h: any) => (h.timestamp = new Date(h.timestamp)))
+        setHistory(parsed)
+      }
+
+      const rawPrefs = localStorage.getItem('zinq:prefs')
+      if (rawPrefs) {
+        const p = JSON.parse(rawPrefs)
+        if (p.activeType) setActiveType(p.activeType)
+        if (typeof p.content === 'string') setContent(p.content)
+        if (Array.isArray(p.qrSize)) setQrSize(p.qrSize)
+        if (Array.isArray(p.qrMargin)) setQrMargin(p.qrMargin)
+        if (typeof p.qrColor === 'string') setQrColor(p.qrColor)
+        if (typeof p.qrBgColor === 'string') setQrBgColor(p.qrBgColor)
+        if (typeof p.errorCorrection === 'string') setErrorCorrection(p.errorCorrection)
+        if (typeof p.customBackground === 'string' || p.customBackground === null) setCustomBackground(p.customBackground)
+        if (typeof p.selectedBackgroundName === 'string') {
+          const found = backgroundPatterns.find((b) => b.name === p.selectedBackgroundName)
+          if (found) setSelectedBackground(found)
+        }
+        if (typeof p.wifiPassword === 'string') setWifiPassword(p.wifiPassword)
+        if (typeof p.wifiSecurity === 'string') setWifiSecurity(p.wifiSecurity)
+        if (typeof p.wifiHidden === 'boolean') setWifiHidden(p.wifiHidden)
+        if (typeof p.vcardName === 'string') setVcardName(p.vcardName)
+        if (typeof p.vcardPhone === 'string') setVcardPhone(p.vcardPhone)
+        if (typeof p.vcardEmail === 'string') setVcardEmail(p.vcardEmail)
+        if (typeof p.vcardOrg === 'string') setVcardOrg(p.vcardOrg)
+      }
+
+  const rawFavs = localStorage.getItem('zinq:favs')
+  if (rawFavs) setFavorites(JSON.parse(rawFavs))
+    } catch {
+      // ignore
+
+  // Persist favorites
+  useEffect(() => {
+    try { localStorage.setItem('zinq:favs', JSON.stringify(favorites)) } catch {}
+  }, [favorites])
+    }
+  }, [])
+
+  // Persist history
+  useEffect(() => {
+    try {
+      localStorage.setItem('zinq:history', JSON.stringify(history))
+    } catch {}
+  }, [history])
+
+  // Persist preferences
+  useEffect(() => {
+    try {
+      const prefs = {
+        activeType,
+        content,
+        qrSize,
+        qrMargin,
+        qrColor,
+        qrBgColor,
+        errorCorrection,
+        selectedBackgroundName: selectedBackground?.name,
+        customBackground,
+        wifiPassword,
+        wifiSecurity,
+        wifiHidden,
+        vcardName,
+        vcardPhone,
+        vcardEmail,
+        vcardOrg,
+      }
+      localStorage.setItem('zinq:prefs', JSON.stringify(prefs))
+    } catch {}
+  }, [activeType, content, qrSize, qrMargin, qrColor, qrBgColor, errorCorrection, selectedBackground, customBackground, wifiPassword, wifiSecurity, wifiHidden, vcardName, vcardPhone, vcardEmail, vcardOrg])
 
   const generateContent = useCallback(() => {
     switch (activeType) {
@@ -168,6 +250,7 @@ export default function QRGeneratorApp() {
         qrCode: qrDataURL,
       }
       setHistory((prev) => [newHistoryItem, ...prev.slice(0, 9)]) // Keep last 10
+  toast({ title: "Generated", description: "Your QR code is ready." })
     } catch (error) {
       console.error("Error generating QR code:", error)
     }
@@ -192,11 +275,64 @@ export default function QRGeneratorApp() {
       img.onload = () => {
         ctx.drawImage(img, 0, 0, size, size)
         drawQROnCanvas(ctx, size)
+        const link = document.createElement("a")
+        link.href = canvas.toDataURL("image/png")
+        link.download = `qr-code-${activeType}-${Date.now()}.png`
+        link.click()
+        toast({ title: "Downloaded", description: "Saved PNG to your device." })
       }
       img.src = customBackground
     } else {
       applyGradientBackground(ctx, size)
       drawQROnCanvas(ctx, size)
+      const link = document.createElement("a")
+      link.href = canvas.toDataURL("image/png")
+      link.download = `qr-code-${activeType}-${Date.now()}.png`
+      link.click()
+      toast({ title: "Downloaded", description: "Saved PNG to your device." })
+    }
+  }
+
+  // Download as SVG using qrcode's toString API
+  const downloadSVG = async () => {
+    const finalContent = generateContent()
+    if (!finalContent.trim()) return
+    try {
+      const svg = await QRCode.toString(finalContent, {
+        type: "svg",
+        width: qrSize[0],
+        margin: qrMargin[0],
+        errorCorrectionLevel: errorCorrection as any,
+      } as any)
+      const blob = new Blob([svg], { type: "image/svg+xml" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `qr-code-${activeType}-${Date.now()}.svg`
+      link.click()
+      URL.revokeObjectURL(url)
+  toast({ title: "Exported", description: "SVG downloaded." })
+    } catch (e) {
+      console.error("SVG export failed", e)
+    }
+  }
+
+  // Copy PNG image to clipboard (if supported)
+  const copyImageToClipboard = async () => {
+    try {
+      if (!qrCode) return
+      const res = await fetch(qrCode)
+      const blob = await res.blob()
+      if (navigator.clipboard && (window as any).ClipboardItem) {
+        const item = new (window as any).ClipboardItem({ [blob.type]: blob })
+        await (navigator.clipboard as any).write([item])
+      } else {
+        // Fallback: copy content text
+        await navigator.clipboard.writeText(generateContent())
+      }
+  toast({ title: "Copied", description: "QR copied to clipboard." })
+    } catch (e) {
+      console.error("Copy failed", e)
     }
   }
 
@@ -285,7 +421,10 @@ export default function QRGeneratorApp() {
   }
 
   const clearHistory = () => {
-    setHistory([])
+    if (confirm('Clear all history?')) {
+      setHistory([])
+      toast({ title: "History cleared" })
+    }
   }
 
   useEffect(() => {
@@ -293,6 +432,26 @@ export default function QRGeneratorApp() {
     window.addEventListener('zinq:toggle-history', onToggle as any)
     return () => window.removeEventListener('zinq:toggle-history', onToggle as any)
   }, [])
+
+  // Keyboard shortcuts: Ctrl+Enter generate, H toggle history
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault()
+        generateQR()
+      } else if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault()
+        setShowHistory((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [generateQR])
+
+  // Broadcast showHistory changes so other components (Hero) can reflect label state
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('zinq:history-changed', { detail: { showHistory } }))
+  }, [showHistory])
 
   return (
     <div className="min-h-screen bg-background">
@@ -621,9 +780,17 @@ export default function QRGeneratorApp() {
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>
+                      <Button variant="outline" size="sm" onClick={downloadSVG}>
+                        <Download className="h-4 w-4 mr-2" />
+                        SVG
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => copyToClipboard(generateContent())}>
                         <Copy className="h-4 w-4 mr-2" />
                         Copy Content
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={copyImageToClipboard}>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy Image
                       </Button>
                     </div>
                   </div>
@@ -643,12 +810,27 @@ export default function QRGeneratorApp() {
               <CardDescription>Your last {history.length} generated QR codes</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-sm text-muted-foreground">Click a star to favorite</div>
+                <Button variant="outline" size="sm" onClick={clearHistory}>
+                  <Trash2 className="h-4 w-4 mr-2" /> Clear all
+                </Button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {history.map((item) => (
                   <div key={item.id} className="border rounded-lg p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary">{item.type.toUpperCase()}</Badge>
-                      <span className="text-xs text-muted-foreground">{item.timestamp.toLocaleDateString()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{item.timestamp.toLocaleDateString()}</span>
+                        <button
+                          className={`text-sm ${favorites[item.id] ? 'text-primary' : 'text-muted-foreground'} hover:text-primary`}
+                          onClick={() => setFavorites((f) => ({ ...f, [item.id]: !f[item.id] }))}
+                          title={favorites[item.id] ? 'Unfavorite' : 'Favorite'}
+                        >
+                          {favorites[item.id] ? '★' : '☆'}
+                        </button>
+                      </div>
                     </div>
                     <img src={item.qrCode || "/placeholder.svg"} alt="QR Code" className="w-20 h-20 mx-auto" />
                     <p className="text-sm text-muted-foreground truncate">{item.content}</p>
@@ -664,6 +846,24 @@ export default function QRGeneratorApp() {
                           link.download = `qr-${item.type}-${item.id}.png`
                           link.href = item.qrCode
                           link.click()
+                        }}
+                      >
+                        <Download className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={async () => {
+                          try {
+                            const svg = await QRCode.toString(item.content, { type: 'svg', width: 400, margin: 2 } as any)
+                            const blob = new Blob([svg], { type: 'image/svg+xml' })
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = `qr-${item.type}-${item.id}.svg`
+                            a.click()
+                            URL.revokeObjectURL(url)
+                          } catch (e) { console.error(e) }
                         }}
                       >
                         <Download className="h-3 w-3" />

@@ -1,10 +1,24 @@
 "use client"
 
 import Image from "next/image"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sparkles, ArrowRight, History, Shield, Zap, Download, Cloud } from "lucide-react"
 
 export function Hero() {
+  const [historyShown, setHistoryShown] = useState(false)
+
+  useEffect(() => {
+    const onChanged = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { showHistory?: boolean } | undefined
+      if (detail && typeof detail.showHistory === 'boolean') {
+        setHistoryShown(detail.showHistory)
+      }
+    }
+    window.addEventListener('zinq:history-changed', onChanged as any)
+    return () => window.removeEventListener('zinq:history-changed', onChanged as any)
+  }, [])
+
   return (
     <section className="relative">
       {/* background grid + glow */}
@@ -41,10 +55,13 @@ export function Hero() {
                 variant="outline"
                 size="lg"
                 className="gap-2"
-                onClick={() => window.dispatchEvent(new CustomEvent('zinq:toggle-history'))}
+                onClick={() => {
+                  setHistoryShown((v) => !v)
+                  window.dispatchEvent(new CustomEvent('zinq:toggle-history'))
+                }}
               >
                 <History className="h-4 w-4" />
-                View history
+                {historyShown ? 'Hide history' : 'View history'}
               </Button>
             </div>
 

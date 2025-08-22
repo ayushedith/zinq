@@ -1,10 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { QrCode } from "lucide-react"
+import { HelpCircle } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { InstallButton } from "@/components/pwa/install-button"
 import Image from "next/image"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 export function Navbar() {
   return (
@@ -16,6 +18,23 @@ export function Navbar() {
         </Link>
         <nav className="flex items-center gap-2">
           <InstallButton />
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-foreground" aria-label="Help">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Help & Shortcuts</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>• Ctrl + Enter: Generate QR</p>
+                <p>• H: Toggle history</p>
+                <p>• Use the Install button to add Zinq to your home screen.</p>
+              </div>
+            </DialogContent>
+          </Dialog>
           <ThemeToggle />
         </nav>
       </div>

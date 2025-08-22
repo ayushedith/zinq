@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { ServiceWorkerRegister } from '@/components/pwa/sw-register'
 import { ThemeFromImage } from '@/components/theme-from-image'
+import { Toaster } from '@/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'Zinq',
@@ -36,6 +37,7 @@ html {
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
+        <link rel="preload" as="image" href="/mascot.png" />
       </head>
   <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -43,6 +45,7 @@ html {
           <Navbar />
           {children}
           <ServiceWorkerRegister />
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

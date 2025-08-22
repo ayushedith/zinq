@@ -69,10 +69,21 @@ export function ThemeFromImage() {
         const primaryHex = hex(primary.r, primary.g, primary.b)
         const accentHex = hex(accent.r, accent.g, accent.b)
 
+        const toLin = (c: number) => {
+          const x = c / 255
+          return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)
+        }
+        const luminance = (r: number, g: number, b: number) => 0.2126 * toLin(r) + 0.7152 * toLin(g) + 0.0722 * toLin(b)
+        const fgFor = (r: number, g: number, b: number) => (luminance(r, g, b) < 0.5 ? "#ffffff" : "#0a0a0a")
+        const primaryFg = fgFor(primary.r, primary.g, primary.b)
+        const accentFg = fgFor(accent.r, accent.g, accent.b)
+
         const root = document.documentElement
         root.style.setProperty("--primary", primaryHex)
         root.style.setProperty("--accent", accentHex)
-        root.style.setProperty("--ring", primaryHex)
+  root.style.setProperty("--ring", primaryHex)
+  root.style.setProperty("--primary-foreground", primaryFg)
+  root.style.setProperty("--accent-foreground", accentFg)
         // Optional: adjust chart colors roughly around the palette
         root.style.setProperty("--chart-1", primaryHex)
         root.style.setProperty("--chart-3", accentHex)

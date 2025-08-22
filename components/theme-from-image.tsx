@@ -5,6 +5,20 @@ import { useEffect } from "react"
 // Extracts a simple palette from /mascot.png and applies it to CSS variables
 export function ThemeFromImage() {
   useEffect(() => {
+    // Apply cached palette immediately if present
+    try {
+      const cached = localStorage.getItem('zinq:palette')
+      if (cached) {
+        const p = JSON.parse(cached)
+        const root = document.documentElement
+        if (p.primary) root.style.setProperty('--primary', p.primary)
+        if (p.accent) root.style.setProperty('--accent', p.accent)
+        if (p.primaryFg) root.style.setProperty('--primary-foreground', p.primaryFg)
+        if (p.accentFg) root.style.setProperty('--accent-foreground', p.accentFg)
+        if (p.primary) root.style.setProperty('--ring', p.primary)
+      }
+    } catch {}
+
     const img = new Image()
     img.src = "/mascot.png"
     img.crossOrigin = "anonymous"
@@ -84,6 +98,9 @@ export function ThemeFromImage() {
   root.style.setProperty("--ring", primaryHex)
   root.style.setProperty("--primary-foreground", primaryFg)
   root.style.setProperty("--accent-foreground", accentFg)
+        try {
+          localStorage.setItem('zinq:palette', JSON.stringify({ primary: primaryHex, accent: accentHex, primaryFg, accentFg }))
+        } catch {}
         // Optional: adjust chart colors roughly around the palette
         root.style.setProperty("--chart-1", primaryHex)
         root.style.setProperty("--chart-3", accentHex)

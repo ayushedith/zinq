@@ -5,6 +5,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { ServiceWorkerRegister } from '@/components/pwa/sw-register'
+import { ThemeFromImage } from '@/components/theme-from-image'
 
 export const metadata: Metadata = {
   title: 'Zinq',
@@ -38,6 +39,7 @@ html {
       </head>
   <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeFromImage />
           <Navbar />
           {children}
           <ServiceWorkerRegister />

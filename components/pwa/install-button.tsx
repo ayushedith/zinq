@@ -43,7 +43,7 @@ export function InstallButton() {
     <Button
       variant="outline"
       size="sm"
-      className="gap-1"
+      className="gap-1 text-foreground"
       title={available ? 'Install this app' : 'Use your browser menu to install (e.g., Chrome: Install App)'}
       onClick={async () => {
         if (deferred) {
